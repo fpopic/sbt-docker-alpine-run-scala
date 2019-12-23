@@ -36,7 +36,7 @@ dockerfile in docker := {
         // Install required packages
         s"apk update",
         s"apk add --no-cache --virtual=.build-dependencies wget ca-certificates",
-        s"apk add --no-cache bash", // needed for scala --version
+        s"apk add --no-cache bash", // needed for `scala --version`, // TODO if needed remove AshScriptPlugin
 
         // Install Scala
         s"cd /tmp",
