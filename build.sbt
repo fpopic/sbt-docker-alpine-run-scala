@@ -6,9 +6,6 @@ organization := "com.github.fpopic"
 
 scalaVersion := "2.12.10"
 
-autoScalaLibrary := false
-libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value % Provided
-
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
 enablePlugins(sbtdocker.DockerPlugin, AshScriptPlugin)
@@ -33,25 +30,6 @@ dockerfile in docker := {
     from("openjdk:8-jre-alpine")
     runRaw(
       Seq(
-        // Install required packages
-        s"apk update",
-        s"apk add --no-cache --virtual=.build-dependencies wget ca-certificates",
-        s"apk add --no-cache bash", // needed for `scala --version`, // TODO if needed remove AshScriptPlugin
-
-        // Install Scala
-        s"cd /tmp",
-        s"wget --no-verbose https://downloads.lightbend.com/scala/$SCALA_VERSION/scala-$SCALA_VERSION.tgz",
-        s"tar xzf scala-$SCALA_VERSION.tgz",
-        s"mkdir -p /usr/share/scala",
-        s"rm /tmp/scala-$SCALA_VERSION/bin/*.bat",
-        s"mv /tmp/scala-$SCALA_VERSION/bin /tmp/scala-$SCALA_VERSION/lib /usr/share/scala",
-        s"apk del .build-dependencies",
-        s"rm -rf /tmp/*",
-        s"chmod -R 755 /usr/share/scala",
-        s"ln -s /usr/share/scala/bin/scala /usr/local/bin/scala",
-        s"scala -version",
-
-        // Add non root app:app user
         s"addgroup -g $GROUP_ID -S app",
         s"adduser -H -u $USER_ID -S app -G app",
         s"mkdir /app",
@@ -62,7 +40,6 @@ dockerfile in docker := {
     copy(classpath, ".")
     copy(jarFile, jarFile.getName)
     entryPoint("java", "-cp", classpathString, mainclass)
-    // TODO move this to .sh and expose `bash` as well if bash stays
   }
 }
 
