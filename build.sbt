@@ -23,15 +23,11 @@ dockerfile in docker := {
     .getOrElse(sys.error("Expected exactly one main class!"))
 
   new Dockerfile {
-    val SCALA_VERSION = scalaVersion.value
-    val USER_ID = 1001
-    val GROUP_ID = 1001
-
     from("openjdk:8-jre-alpine")
     runRaw(
       Seq(
-        s"addgroup -g $GROUP_ID -S app",
-        s"adduser -H -u $USER_ID -S app -G app",
+        s"addgroup -g 1001 -S app",
+        s"adduser -H -u 1001 -S app -G app",
         s"mkdir /app",
         s"chown -R app:app /app",
       ).mkString(" && ")
