@@ -1,5 +1,7 @@
 import sbt.Keys.`package`
 
+Global / onChangedBuildSource := ReloadOnSourceChanges
+
 name := "my-example"
 version := "1.0.0-SNAPSHOT"
 organization := "com.github.fpopic"
@@ -14,10 +16,13 @@ mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
 enablePlugins(DockerPlugin)
 
-excludeFilter in Compile in unmanagedResources :=
-  "development.conf" || "production.conf" || "staging.conf"
+// `reference.conf` and `application.conf` will be included,
+// one of the excluded configurations will be supplied during runtime in the container
+excludeFilter in packageBin in unmanagedResources :=
+  "development.conf" || "production.conf" || "staging.conf" // TODO excluded from packaging to jar
 
 dockerfile in docker := {
+  val configFileOpt = (unmanagedResources in Compile).value.find(_.getName.endsWith("production.conf"))
   val jarFile = (`package` in(Compile, packageBin)).value
 
   // Make a colon separated classpath with the JAR file
@@ -40,7 +45,12 @@ dockerfile in docker := {
     workDir("/app")
     copy(classpathFiles, ".")
     copy(jarFile, jarFile.getName)
-    entryPoint("java", "-cp", classpathString, mainclass)
+    if (configFileOpt.nonEmpty) {
+      val configFile = configFileOpt.get
+      copy(configFile, configFile.getName)
+      entryPoint("java", s"-Dconfig.resource=/app/${configFile.getName}", "-cp", classpathString, mainclass)
+    }
+    else entryPoint("java", "-cp", classpathString, mainclass)
   }
 }
 
