@@ -20,7 +20,7 @@ dockerfile in docker := {
 
   // Make a colon separated classpath with the JAR file
   val classpath = (managedClasspath in Compile).value.files
-  val classpathString = s"/usr/share/scala/:${classpath.map(_.getName).mkString(":")}:${jarFile.getName}"
+  val classpathString = s"${classpath.map(_.getName).mkString(":")}:${jarFile.getName}"
 
   val mainclass = (mainClass in(Compile, packageBin)).value
     .getOrElse(sys.error("Expected exactly one main class!"))
