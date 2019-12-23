@@ -62,6 +62,7 @@ dockerfile in docker := {
     copy(classpath, ".")
     copy(jarFile, jarFile.getName)
     entryPoint("java", "-cp", classpathString, mainclass)
+    // TODO move this to .sh and expose `bash` as well if bash stays
   }
 }
 
