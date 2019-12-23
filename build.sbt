@@ -49,13 +49,13 @@ dockerfile in docker := {
         s"rm -rf /tmp/*",
         s"chmod -R 755 /usr/share/scala",
         s"ln -s /usr/share/scala/bin/scala /usr/local/bin/scala",
+        s"scala -version",
 
         // Add non root app:app user
         s"addgroup -g $GROUP_ID -S app",
         s"adduser -H -u $USER_ID -S app -G app",
         s"mkdir /app",
         s"chown -R app:app /app",
-        s"scala -version",
       ).mkString(" && ")
     )
     workDir("/app")
