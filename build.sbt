@@ -43,11 +43,11 @@ dockerfile in docker := {
       ).mkString(" && ")
     )
     workDir("/app")
-    copy(classpathFiles, ".")
-    copy(jarFile, jarFile.getName)
+    copy(classpathFiles, ".", "app:app")
+    copy(jarFile, jarFile.getName, "app:app")
     if (configFileOpt.nonEmpty) {
       val configFile = configFileOpt.get
-      copy(configFile, configFile.getName)
+      copy(configFile, configFile.getName, "app:app")
       entryPoint("java", s"-Dconfig.resource=/app/${configFile.getName}", "-cp", classpathString, mainclass)
     }
     else entryPoint("java", "-cp", classpathString, mainclass)
@@ -59,6 +59,12 @@ imageNames in docker := Seq(
   ImageName(s"${developers.value.head.id}/${name.value}:latest"),
   // Sets a name with a tag that contains the project version
   ImageName(s"${developers.value.head.id}/${name.value}:v${version.value}")
+)
+
+buildOptions in docker := BuildOptions(
+  cache = false,
+  removeIntermediateContainers = BuildOptions.Remove.Always,
+  pullBaseImage = BuildOptions.Pull.IfMissing
 )
 
 // make the docker build task depend on sbt packageBin task
