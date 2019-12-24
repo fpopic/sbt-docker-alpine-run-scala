@@ -1,3 +1,6 @@
+import java.io.File
+
+import Dependencies._
 import sbt.Keys.`package`
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -12,6 +15,9 @@ developers := Developer(
   url = url("https://github.com/fpopic")) :: Nil
 scalaVersion := "2.12.10"
 
+libraryDependencies ++= Seq(pureconfig, slf4jApi, logbackClassic, scalaLogging)
+
+// define main class used as docker image entrypoint
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
 enablePlugins(DockerPlugin)
@@ -19,18 +25,25 @@ enablePlugins(DockerPlugin)
 // `reference.conf` and `application.conf` will be included,
 // one of the excluded configurations will be supplied during runtime in the container
 excludeFilter in packageBin in unmanagedResources :=
-  "development.conf" || "production.conf" || "staging.conf" // TODO excluded from packaging to jar
+  "development.conf" || "production.conf" || "staging.conf"
 
 dockerfile in docker := {
-  val configFileOpt = (unmanagedResources in Compile).value.find(_.getName.endsWith("production.conf"))
+  // Get app's jar file and main class
   val jarFile = (`package` in(Compile, packageBin)).value
+  val mainClazz = (mainClass in(Compile, packageBin)).value
+    .getOrElse(sys.error("Expected exactly one main class, set `mainClass in(Compile, run)`!"))
 
-  // Make a colon separated classpath with the JAR file
+  // Decide which configuration will be used
+  val resources = (unmanagedResources in Compile).value
+  val production = resources.find(_.getName.endsWith("production.conf"))
+  val reference = resources.find(_.getName.endsWith("reference.conf"))
+  val configFile = Seq(production, reference).collectFirst { case Some(c) => c }
+    .getOrElse(sys.error("Expected at least `reference.conf`!"))
+
+  // Make a colon separated classpath with the app's jar and conf file at the end
   val classpathFiles = (managedClasspath in Compile).value.files
-  val classpathString = s"${classpathFiles.map(_.getName).mkString(":")}:${jarFile.getName}"
-
-  val mainclass = (mainClass in(Compile, packageBin)).value
-    .getOrElse(sys.error("Expected exactly one main class, set `mainClass in(Compile, run)`."))
+  val classpathStringWithConfAndJar =
+    s"${classpathFiles.map("/app/" + _.getName).mkString(":")}/app/app.conf:/app/app.jar"
 
   new Dockerfile {
     from("openjdk:8-jre-alpine")
@@ -39,18 +52,15 @@ dockerfile in docker := {
         "addgroup -g 1001 -S app",
         "adduser -H -u 1001 -S app -G app",
         "mkdir /app",
-        "chown -R app:app /app",
-      ).mkString(" && ")
+      ).mkString(" && \\\n\t")
     )
-    workDir("/app")
-    copy(classpathFiles, ".", "app:app")
-    copy(jarFile, jarFile.getName, "app:app")
-    if (configFileOpt.nonEmpty) {
-      val configFile = configFileOpt.get
-      copy(configFile, configFile.getName, "app:app")
-      entryPoint("java", s"-Dconfig.resource=/app/${configFile.getName}", "-cp", classpathString, mainclass)
+    classpathFiles.foreach { file =>
+      copy(file, s"/app/${file.getName}")
     }
-    else entryPoint("java", "-cp", classpathString, mainclass)
+    copy(jarFile, "/app/app.jar")
+    copy(configFile, "/app/app.conf")
+    runRaw("chown -R app:app /app")
+    entryPoint("java", "-Dconfig.file=/app/app.conf", "-cp", classpathStringWithConfAndJar, mainClazz)
   }
 }
 
@@ -62,10 +72,13 @@ imageNames in docker := Seq(
 )
 
 buildOptions in docker := BuildOptions(
-  cache = false,
+  cache = true,
   removeIntermediateContainers = BuildOptions.Remove.Always,
   pullBaseImage = BuildOptions.Pull.IfMissing
 )
 
 // make the docker build task depend on sbt packageBin task
 docker := {docker dependsOn Compile / packageBin}.value
+
+//https://github.com/sbt/sbt-native-packager/blob/master/test-project-docker/build.sbt
+//  val appDir: File = stage.value
