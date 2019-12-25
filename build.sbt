@@ -26,7 +26,7 @@ enablePlugins(DockerPlugin)
 // `reference.conf` and `application.conf` will be included,
 // one of the excluded configurations will be supplied during runtime in the container
 excludeFilter in packageBin in unmanagedResources :=
-  "staging.conf" || "production.conf" || "development.conf" || "local.conf"
+  "production.conf" || "staging.conf" || "development.conf" || "local.conf"
 
 dockerfile in docker := {
   // Get app's jar file and main class

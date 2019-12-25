@@ -3,7 +3,7 @@
 
 Would like to exclude environment `{production, staging, development}.conf` configuration files from the `packageBin` task and provide them in the dockerfile entrypoint cmd.
 
-Generated docker file using `sbt-docker` + `package` task` looks like:
+Generated docker file using `sbt-docker` + `package` task looks like:
 
 ```dockerfile
 FROM openjdk:8-jre-alpine
