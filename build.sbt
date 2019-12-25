@@ -80,5 +80,20 @@ buildOptions in docker := BuildOptions(
 // make the docker build task depend on sbt packageBin task
 docker := {docker dependsOn Compile / packageBin}.value
 
+
+// TODO ensure correct classpath order
+
 //https://github.com/sbt/sbt-native-packager/blob/master/test-project-docker/build.sbt
 //  val appDir: File = stage.value
+
+// exclu
+//mappings in (Compile, packageBin) += {
+//
+//  (unmanagedResourceDirectories in (Compile, packageBin)).value
+//    .flatten.filter(_.getName.endsWith(".conf").map
+//
+//
+//    //foreach{
+//
+//  } / "in" / "example.txt") -> "out/example.txt"
+//}
