@@ -21,31 +21,25 @@ libraryDependencies ++= Seq(pureconfig, slf4jApi, logbackClassic, scalaLogging)
 // define main class used as docker image entrypoint
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
-enablePlugins(DockerPlugin)
+enablePlugins(sbtdocker.DockerPlugin, AshScriptPlugin, JavaAppPackaging)
 
 // `reference.conf` and `application.conf` will be included,
 // one of the excluded configurations will be supplied during runtime in the container
 excludeFilter in packageBin in unmanagedResources :=
-  "staging.conf" || "production.conf" || "development.conf" || "local.conf"
+  "production.conf" || "staging.conf" || "development.conf" || "local.conf"
 
 dockerfile in docker := {
-  // Get app's jar file and main class
-  val jarFile = (`package` in(Compile, packageBin)).value
-  val mainClazz = (mainClass in(Compile, packageBin)).value
-    .getOrElse(sys.error("Expected exactly one main class, set `mainClass in(Compile, run)`!"))
+  val appDir: File = stage.value
 
-  // Decide which configuration will be used
-  val resources = (unmanagedResources in Compile).value
-  val production = resources.find(_.getName.endsWith("production.conf"))
-  val application = resources.find(_.getName.endsWith("application.conf"))
-  val reference = resources.find(_.getName.endsWith("reference.conf"))
-  val configFile = Seq(production, application, reference).collectFirst { case Some(c) => c }
-    .getOrElse(sys.error("Expected at least `reference.conf`!"))
-
-  // Make a colon separated classpath with the app's jar and conf file at the end
-  val classpathFiles = (managedClasspath in Compile).value.files
-  val classpathStringWithConfAndJar =
-    s"${classpathFiles.map("/app/" + _.getName).mkString(":")}/app/app.conf:/app/app.jar"
+  val configFile = {
+    // Decide which configuration will be used
+    val resources = (unmanagedResources in Compile).value
+    val production = resources.find(_.getName.endsWith("production.conf"))
+    val application = resources.find(_.getName.endsWith("application.conf"))
+    val reference = resources.find(_.getName.endsWith("reference.conf"))
+    Seq(production, application, reference).collectFirst { case Some(c) => c }
+      .getOrElse(sys.error("Expected at least `reference.conf`!"))
+  }
 
   new Dockerfile {
     from("openjdk:8-jre-alpine")
@@ -56,13 +50,9 @@ dockerfile in docker := {
         "mkdir /app",
       ).mkString(" && \\\n\t")
     )
-    classpathFiles.foreach { file =>
-      copy(file, s"/app/${file.getName}")
-    }
-    copy(jarFile, "/app/app.jar")
-    copy(configFile, "/app/app.conf")
+    copy(appDir, "/app/")
     runRaw("chown -R app:app /app")
-    entryPoint("java", "-Dconfig.file=/app/app.conf", "-cp", classpathStringWithConfAndJar, mainClazz)
+    entryPoint(s"/app/bin/${executableScriptName.value}")
   }
 }
 
