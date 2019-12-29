@@ -5,7 +5,7 @@ import sbt.Keys.`package`
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-name := "my-example"
+name := "sbt-docker-example"
 version := "1.0.0-SNAPSHOT"
 organization := "com.github.fpopic"
 developers := Developer(
