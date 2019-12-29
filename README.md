@@ -7,7 +7,8 @@ FROM openjdk:8-jre-alpine
 RUN addgroup -g 1001 -S app && \
 	adduser -H -u 1001 -S app -G app && \
 	mkdir /app
-COPY 0/stage /app/
+COPY 0/reference.conf /app/app.conf  <====it should be production.conf but excludeFilter removed it?
+COPY 1/stage /app/
 RUN chown -R app:app /app
 ENTRYPOINT ["\/app\/bin\/sbt-docker-example"]
 ```
