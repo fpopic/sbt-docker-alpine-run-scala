@@ -1,11 +1,10 @@
 import java.io.File
 
 import Dependencies._
-import sbt.Keys.`package`
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-name := "my-example"
+name := "sbt-docker-example"
 version := "1.0.0-SNAPSHOT"
 organization := "com.github.fpopic"
 developers := Developer(
@@ -21,11 +20,14 @@ libraryDependencies ++= Seq(pureconfig, slf4jApi, logbackClassic, scalaLogging)
 // define main class used as docker image entrypoint
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
+// Need to use full name to DockerPlugin,
+// since sbt-native-packager uses the same name for its Docker plugin.
+// AshScriptPlugin helps in alpine images that don't have bash installed
 enablePlugins(sbtdocker.DockerPlugin, AshScriptPlugin, JavaAppPackaging)
 
-// `reference.conf` and `application.conf` will be included,
-// one of the excluded configurations will be supplied during runtime in the container
-excludeFilter in packageBin in unmanagedResources :=
+// `reference.conf` and `application.conf` will always be included,
+// one of the excluded configurations will be supplied in runtime from the /app/app.conf
+excludeFilter in `packageBin` in unmanagedResources :=
   "production.conf" || "staging.conf" || "development.conf" || "local.conf"
 
 dockerfile in docker := {
@@ -50,11 +52,15 @@ dockerfile in docker := {
         "mkdir /app",
       ).mkString(" && \\\n\t")
     )
+    copy(configFile, "/app/app.conf")
     copy(appDir, "/app/")
     runRaw("chown -R app:app /app")
     entryPoint(s"/app/bin/${executableScriptName.value}")
   }
 }
+
+// add jvm parameter for typesafe config
+bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../app.conf""""
 
 imageNames in docker := Seq(
   // Updates the latest tag
@@ -70,4 +76,16 @@ buildOptions in docker := BuildOptions(
 )
 
 // make the docker build task depend on sbt packageBin task
-docker := {docker dependsOn Compile / packageBin}.value
+docker := {docker dependsOn Compile / packageBin} .value
+
+
+
+// // try with mappings from project to artifact (in this case docker image)
+//mappings in Docker += {
+//  ((resourceDirectory in Compile).value / "production.conf") -> "conf/production.conf"
+//  ((resourceDirectory in Compile).value / "staging.conf") -> "conf/staging.conf"
+//  ((resourceDirectory in Compile).value / "development.conf") -> "conf/development.conf"
+//  ((resourceDirectory in Compile).value / "local.conf") -> "conf/local.conf"
+//  ((resourceDirectory in Compile).value / "reference.conf") -> "conf/reference.conf"
+//  ((resourceDirectory in Compile).value / "applicaiton.conf") -> "conf/application.conf"
+//}
