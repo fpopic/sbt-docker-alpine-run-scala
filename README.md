@@ -1,7 +1,6 @@
-# sbt-docker-alpine-run-scala
-(PoC) Make a sbt setup to build and publish minimal docker image that can run a scala app.   
+# sbt-docker + sbt-native-packager JavaAppPackaging
 
-Generated docker file using `sbt-docker` `docker` task looks like:
+Generated dockerfile using `docker` task looks like:
 
 ```dockerfile
 FROM openjdk:8-jre-alpine
