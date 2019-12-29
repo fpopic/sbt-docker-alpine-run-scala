@@ -29,4 +29,41 @@ RUN chown -R app:app /app
 ENTRYPOINT ["java", "-Dconfig.file=\/app\/app.conf", "-cp", "\/app\/scala-logging_2.12-3.9.2.jar:\/app\/slf4j-api-1.7.29.jar:\/app\/scala-library.jar:\/app\/logback-classic-1.2.3.jar:\/app\/scala-reflect.jar:\/app\/config-1.3.4.jar:\/app\/pureconfig-generic_2.12-0.12.1.jar:\/app\/pureconfig_2.12-0.12.1.jar:\/app\/shapeless_2.12-2.3.3.jar:\/app\/macro-compat_2.12-1.1.1.jar:\/app\/logback-core-1.2.3.jar:\/app\/pureconfig-core_2.12-0.12.1.jar:\/app\/pureconfig-macros_2.12-0.12.1.jar\/app\/app.conf:\/app\/app.jar", "com.github.fpopic.Main"]
 ```
 
+```bash
+$ tree target/docker/
+
+target/docker/
+├── 0
+│   └── pureconfig_2.12-0.12.1.jar
+├── 1
+│   └── slf4j-api-1.7.29.jar
+├── 10
+│   └── pureconfig-macros_2.12-0.12.1.jar
+├── 11
+│   └── scala-library.jar
+├── 12
+│   └── shapeless_2.12-2.3.3.jar
+├── 13
+│   └── my-example_2.12-1.0.0-SNAPSHOT.jar
+├── 14
+│   └── reference.conf
+├── 2
+│   └── pureconfig-core_2.12-0.12.1.jar
+├── 3
+│   └── config-1.3.4.jar
+├── 4
+│   └── macro-compat_2.12-1.1.1.jar
+├── 5
+│   └── logback-classic-1.2.3.jar
+├── 6
+│   └── scala-reflect.jar
+├── 7
+│   └── scala-logging_2.12-3.9.2.jar
+├── 8
+│   └── pureconfig-generic_2.12-0.12.1.jar
+├── 9
+│   └── logback-core-1.2.3.jar
+└── Dockerfile
+```
+
 Problem can occur when the classpath dependencies have broken order.
