@@ -1,9 +1,6 @@
-# sbt-docker-alpine-run-scala
-(PoC) Make a sbt setup to build and publish minimal docker image that can run a scala app.   
+# sbt-docker docker that depends on package with classpath
 
-Would like to exclude environment `{production, staging, development}.conf` configuration files from the `packageBin` task and provide them in the dockerfile entrypoint cmd.
-
-Generated docker file using `sbt-docker` + `package` task looks like:
+Generated docker file using `sbt-docker docker` and `package` task looks like:
 
 ```dockerfile
 FROM openjdk:8-jre-alpine
