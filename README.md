@@ -43,7 +43,7 @@ target/docker/
 ├── 12
 │   └── shapeless_2.12-2.3.3.jar
 ├── 13
-│   └── my-example_2.12-1.0.0-SNAPSHOT.jar
+│   └── sbt-docker-example_2.12-1.0.0-SNAPSHOT.jar
 ├── 14
 │   └── reference.conf
 ├── 2
