@@ -1,6 +1,6 @@
-# sbt-docker docker that depends on package with classpath
+# sbt-docker docker + package
 
-Generated docker file using `sbt-docker docker` and `package` task looks like:
+Generated docker file using `docker` task looks like:
 
 ```dockerfile
 FROM openjdk:8-jre-alpine
