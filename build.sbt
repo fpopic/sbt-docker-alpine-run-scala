@@ -23,9 +23,9 @@ mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
 enablePlugins(DockerPlugin)
 
-// `reference.conf` and `application.conf` will be included,
-// one of the excluded configurations will be supplied during runtime in the container
-excludeFilter in packageBin in unmanagedResources :=
+// `reference.conf` and `application.conf` will always be included,
+// one of the excluded configurations will be supplied in runtime from the /app/app.conf
+excludeFilter in `packageBin` in unmanagedResources :=
   "production.conf" || "staging.conf" || "development.conf" || "local.conf"
 
 dockerfile in docker := {
@@ -34,18 +34,18 @@ dockerfile in docker := {
   val mainClazz = (mainClass in(Compile, packageBin)).value
     .getOrElse(sys.error("Expected exactly one main class, set `mainClass in(Compile, run)`!"))
 
-  // Decide which configuration will be used
-  val resources = (unmanagedResources in Compile).value
-  val production = resources.find(_.getName.endsWith("production.conf"))
-  val application = resources.find(_.getName.endsWith("application.conf"))
-  val reference = resources.find(_.getName.endsWith("reference.conf"))
-  val configFile = Seq(production, application, reference).collectFirst { case Some(c) => c }
-    .getOrElse(sys.error("Expected at least `reference.conf`!"))
-
   // Make a colon separated classpath with the app's jar and conf file at the end
   val classpathFiles = (managedClasspath in Compile).value.files
   val classpathStringWithConfAndJar =
     s"${classpathFiles.map("/app/" + _.getName).mkString(":")}/app/app.conf:/app/app.jar"
+
+  // Get configuration files
+  val confDir = Seq(
+    resourceDirectory.in(Compile).value / "production.conf",
+    resourceDirectory.in(Compile).value / "staging.conf",
+    resourceDirectory.in(Compile).value / "development.conf",
+    resourceDirectory.in(Compile).value / "local.conf",
+  ).filter(_.exists)
 
   new Dockerfile {
     from("openjdk:8-jre-alpine")
@@ -56,13 +56,11 @@ dockerfile in docker := {
         "mkdir /app",
       ).mkString(" && \\\n\t")
     )
-    classpathFiles.foreach { file =>
-      copy(file, s"/app/${file.getName}")
-    }
+    copy(classpathFiles, s"/app/")
     copy(jarFile, "/app/app.jar")
-    copy(configFile, "/app/app.conf")
+    copy(confDir, "/app/conf/")
     runRaw("chown -R app:app /app")
-    entryPoint("java", "-Dconfig.file=/app/app.conf", "-cp", classpathStringWithConfAndJar, mainClazz)
+    entryPoint("java", "-Dconfig.file=/app/conf/production.conf", "-cp", classpathStringWithConfAndJar, mainClazz)
   }
 }
 
