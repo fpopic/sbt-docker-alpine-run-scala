@@ -28,6 +28,9 @@ enablePlugins(DockerPlugin)
 excludeFilter in `packageBin` in unmanagedResources :=
   "production.conf" || "staging.conf" || "development.conf" || "local.conf"
 
+// make the docker build task depend on sbt packageBin task
+docker := {docker dependsOn Compile / packageBin}.value
+
 dockerfile in docker := {
   // Get app's jar file and main class
   val jarFile = (`package` in(Compile, packageBin)).value
@@ -76,6 +79,3 @@ buildOptions in docker := BuildOptions(
   removeIntermediateContainers = BuildOptions.Remove.Always,
   pullBaseImage = BuildOptions.Pull.IfMissing
 )
-
-// make the docker build task depend on sbt packageBin task
-docker := {docker dependsOn Compile / packageBin}.value
