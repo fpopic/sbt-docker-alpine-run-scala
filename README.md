@@ -6,5 +6,5 @@ Would like to exclude environment `{production, staging, development}.conf` conf
 from the .jar and provide them from the docker image runtime.
 
 Check the branches.
-1. https://github.com/fpopic/sbt-docker-alpine-run-scala/tree/docker-sbt-with-package-task
-2. https://github.com/fpopic/sbt-docker-alpine-run-scala/tree/sbt-native-packager-with-java-app-packaging
+1. https://github.com/fpopic/sbt-docker-alpine-run-scala/tree/sbt-docker-with-package-task
+2. https://github.com/fpopic/sbt-docker-alpine-run-scala/tree/sbt-docker-with-java-app-packaging
