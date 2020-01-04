@@ -5,8 +5,8 @@ Generated docker file using `docker` task looks like:
 ```dockerfile
 FROM openjdk:8-jre-alpine
 RUN addgroup -g 1001 -S app && \
-	adduser -H -u 1001 -S app -G app && \
-	mkdir /app
+    adduser -H -u 1001 -S app -G app && \
+    mkdir /app
 COPY 0/pureconfig_2.12-0.12.1.jar 1/slf4j-api-1.7.29.jar 2/pureconfig-core_2.12-0.12.1.jar 3/config-1.3.4.jar 4/macro-compat_2.12-1.1.1.jar 5/logback-classic-1.2.3.jar 6/scala-reflect.jar 7/scala-logging_2.12-3.9.2.jar 8/pureconfig-generic_2.12-0.12.1.jar 9/logback-core-1.2.3.jar 10/pureconfig-macros_2.12-0.12.1.jar 11/scala-library.jar 12/shapeless_2.12-2.3.3.jar /app/
 COPY 13/sbt-docker-example_2.12-1.0.0-SNAPSHOT.jar /app/app.jar
 COPY 14/production.conf 15/staging.conf 16/development.conf /app/conf/
