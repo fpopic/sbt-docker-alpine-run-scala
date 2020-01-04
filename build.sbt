@@ -20,6 +20,9 @@ libraryDependencies ++= Seq(pureconfig, slf4jApi, logbackClassic, scalaLogging)
 // define main class used as docker image entrypoint
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
+// make the docker build task depend on sbt packageBin task
+docker := {docker dependsOn Compile / packageBin}.value
+
 // Need to use full name to DockerPlugin,
 // since sbt-native-packager uses the same name for its Docker plugin.
 // AshScriptPlugin helps in alpine images that don't have bash installed
@@ -32,16 +35,12 @@ excludeFilter in `packageBin` in unmanagedResources :=
 
 dockerfile in docker := {
   val appDir: File = stage.value
-
-  val configFile = {
-    // Decide which configuration will be used
-    val resources = (unmanagedResources in Compile).value
-    val production = resources.find(_.getName.endsWith("production.conf"))
-    val application = resources.find(_.getName.endsWith("application.conf"))
-    val reference = resources.find(_.getName.endsWith("reference.conf"))
-    Seq(production, application, reference).collectFirst { case Some(c) => c }
-      .getOrElse(sys.error("Expected at least `reference.conf`!"))
-  }
+  val confDir = Seq(
+    resourceDirectory.in(Compile).value / "production.conf",
+    resourceDirectory.in(Compile).value / "staging.conf",
+    resourceDirectory.in(Compile).value / "development.conf",
+    resourceDirectory.in(Compile).value / "local.conf",
+  ).filter(_.exists)
 
   new Dockerfile {
     from("openjdk:8-jre-alpine")
@@ -52,15 +51,15 @@ dockerfile in docker := {
         "mkdir /app",
       ).mkString(" && \\\n\t")
     )
-    copy(configFile, "/app/app.conf")
     copy(appDir, "/app/")
+    copy(confDir, "/app/conf/")
     runRaw("chown -R app:app /app")
     entryPoint(s"/app/bin/${executableScriptName.value}")
   }
 }
 
 // add jvm parameter for typesafe config
-bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../app.conf""""
+bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/production.conf""""
 
 imageNames in docker := Seq(
   // Updates the latest tag
@@ -76,16 +75,4 @@ buildOptions in docker := BuildOptions(
 )
 
 // make the docker build task depend on sbt packageBin task
-docker := {docker dependsOn Compile / packageBin} .value
-
-
-
-// // try with mappings from project to artifact (in this case docker image)
-//mappings in Docker += {
-//  ((resourceDirectory in Compile).value / "production.conf") -> "conf/production.conf"
-//  ((resourceDirectory in Compile).value / "staging.conf") -> "conf/staging.conf"
-//  ((resourceDirectory in Compile).value / "development.conf") -> "conf/development.conf"
-//  ((resourceDirectory in Compile).value / "local.conf") -> "conf/local.conf"
-//  ((resourceDirectory in Compile).value / "reference.conf") -> "conf/reference.conf"
-//  ((resourceDirectory in Compile).value / "applicaiton.conf") -> "conf/application.conf"
-//}
+docker := {docker dependsOn Compile / packageBin}.value
