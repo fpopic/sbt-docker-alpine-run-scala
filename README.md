@@ -8,7 +8,7 @@ RUN addgroup -g 1001 -S app && \
 	adduser -H -u 1001 -S app -G app && \
 	mkdir /app
 COPY 0/stage /app/
-COPY 1/production.conf 2/staging.conf 3/development.conf /app/conf/
+COPY 1/production.conf 2/staging.conf 3/development.conf 4/local.conf /app/conf/
 RUN chown -R app:app /app
 ENTRYPOINT ["\/app\/bin\/sbt-docker-example"]
 ```
@@ -43,6 +43,8 @@ target/docker/
 │   └── staging.conf
 ├── 3
 │   └── development.conf
+├── 4
+│   └── local.conf
 └── Dockerfile
 ```
 
