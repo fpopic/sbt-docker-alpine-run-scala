@@ -28,6 +28,9 @@ docker := {docker dependsOn Compile / packageBin}.value
 // AshScriptPlugin helps in alpine images that don't have bash installed
 enablePlugins(sbtdocker.DockerPlugin, AshScriptPlugin, JavaAppPackaging)
 
+// make the docker build task depend on sbt packageBin task
+docker := {docker dependsOn Compile / packageBin}.value
+
 // `reference.conf` and `application.conf` will always be included,
 // one of the excluded configurations will be supplied in runtime from the /app/app.conf
 excludeFilter in `packageBin` in unmanagedResources :=
@@ -74,5 +77,3 @@ buildOptions in docker := BuildOptions(
   pullBaseImage = BuildOptions.Pull.IfMissing
 )
 
-// make the docker build task depend on sbt packageBin task
-docker := {docker dependsOn Compile / packageBin}.value
