@@ -20,9 +20,6 @@ libraryDependencies ++= Seq(pureconfig, slf4jApi, logbackClassic, scalaLogging)
 // define main class used as docker image entrypoint
 mainClass in(Compile, run) := Some("com.github.fpopic.Main")
 
-// make the docker build task depend on sbt packageBin task
-docker := {docker dependsOn Compile / packageBin}.value
-
 // Need to use full name to DockerPlugin,
 // since sbt-native-packager uses the same name for its Docker plugin.
 // AshScriptPlugin helps in alpine images that don't have bash installed
