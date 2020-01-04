@@ -7,8 +7,8 @@ FROM openjdk:8-jre-alpine
 RUN addgroup -g 1001 -S app && \
 	adduser -H -u 1001 -S app -G app && \
 	mkdir /app
-COPY 0/reference.conf /app/app.conf  <====it should be production.conf but excludeFilter removed it?
-COPY 1/stage /app/
+COPY 0/stage /app/
+COPY 1/production.conf 2/staging.conf 3/development.conf /app/conf/
 RUN chown -R app:app /app
 ENTRYPOINT ["\/app\/bin\/sbt-docker-example"]
 ```
@@ -37,6 +37,12 @@ target/docker/
 │           ├── org.scala-lang.scala-reflect-2.12.10.jar
 │           ├── org.slf4j.slf4j-api-1.7.29.jar
 │           └── org.typelevel.macro-compat_2.12-1.1.1.jar
+├── 1
+│   └── production.conf
+├── 2
+│   └── staging.conf
+├── 3
+│   └── development.conf
 └── Dockerfile
 ```
 
