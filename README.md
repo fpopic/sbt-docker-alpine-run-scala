@@ -5,8 +5,8 @@ Generated dockerfile using `docker` task looks like:
 ```dockerfile
 FROM openjdk:8-jre-alpine
 RUN addgroup -g 1001 -S app && \
-	adduser -H -u 1001 -S app -G app && \
-	mkdir /app
+    adduser -H -u 1001 -S app -G app && \
+    mkdir /app
 COPY 0/stage /app/
 COPY 1/production.conf 2/staging.conf 3/development.conf 4/local.conf /app/conf/
 RUN chown -R app:app /app
